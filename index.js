@@ -2,7 +2,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var commentRx = /^[ \t]*(?:\/\/|\/\*)[@#][ \t]+sourceMappingURL=data:(?:application|text)\/json;base64,(.+)(?:\*\/)?/mg;
+var commentRx = /[ \t]*(?:\/\/|\/\*)[@#][ \t]+sourceMappingURL=data:(?:application|text)\/json;base64,(.+)(?:\*\/)?/mg;
 var mapFileCommentRx =
   // //# sourceMappingURL=foo.js.map                       /*# sourceMappingURL=foo.js.map */
   /(?:^[ \t]*\/\/[@|#][ \t]+sourceMappingURL=(.+?)[ \t]*$)|(?:^[ \t]*\/\*[@#][ \t]+sourceMappingURL=(.+?)[ \t]*\*\/[ \t]*$)/mg
