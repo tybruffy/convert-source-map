@@ -13,84 +13,40 @@ function comment(prefix, suffix) {
 
 // Source Map v2 Tests
 test('comment regex old spec - @', function (t) {
-  var validPrefixes = [
-    // Source Map on it's own
+  [ 
     '//@ ',
-    '  //@ ',
-    '\t//@ ',
-    // Source Map inline with code
-    '///@ ',
-    '}}//@ ',
-    // CSS Source Map on it's own
-    '/*@ ',
-    '  /*@ ',
-    '\t/*@ ',
-    // CSS Source Map inline with code
-    '//*@ ',
-    '}}/*@ ',
-    // Source Map V3 on it's own
-    '//# ',
-    '  //# ',
-    '\t//# ',
-    // Source Map V3 inline with code
-    '///# ',
-    '}}//# ',
-    // CSS Source Map V3 on it's own
-    '/*# ',
-    '  /*# ',
-    '\t/*# ',
-    // CSS Source Map V3 inline with code
-    '//*# ',
-    '}}/*# ',    
-  ];
+    '  //@ ', // with leading space
+    '\t//@ ', // with leading tab
+    '//@ ', // with leading text
+    '/*@ ', // multi line style
+    '  /*@ ', // multi line style with leading spaces
+    '\t/*@ ', // multi line style with leading tab
+    '/*@ ', // multi line style with leading text
+  ].forEach(function (x) { t.ok(comment(x, ""), 'matches ' + x) });
 
-  var invalidPrefixes = [ 
+  [
     ' @// @',
     ' @/* @',
+  ].forEach(function (x) { t.ok(!comment(x, ""), 'should not match ' + x) })
+
+  t.end()
+})
+
+test('comment regex new spec - #', function (t) {
+  [ 
+    '  //# ', // with leading spaces
+    '\t//# ', // with leading tab
+    '//# ', // with leading text
+    '/*# ', // multi line style
+    '  /*# ', // multi line style with leading spaces
+    '\t/*# ', // multi line style with leading tab
+    '/*# ', // multi line style with leading text
+  ].forEach(function (x) { t.ok(comment(x, ""), 'matches ' + x) });
+  
+  [ 
     ' #// #',
     ' #/* #',
-  ];
-
-  var validSuffixes = [
-    '',
-    '\t*/',
-    ' */',
-  ];
-
-  var invalidSuffixes = [
-    '*/', // No space
-    ' */ */',
-    ' random other text',
-    ' */random other text',
-  ];
-
-  // Test against valid prefixes with valid suffixes
-  validPrefixes.forEach(function (prefix) {
-    validSuffixes.forEach(function (suffix) {
-      t.ok(comment(prefix, suffix), 'should match ' + prefix + " with suffix: " + suffix)     
-    });
-  });
-
-  // Test against invalid prefixes with valid suffixes
-  invalidPrefixes.forEach(function (prefix) {
-    validSuffixes.forEach(function (suffix) {
-      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
-    });
-  }); 
-
-  // Test against valid prefixes with invalid suffixes
-  validPrefixes.forEach(function (prefix) {
-    invalidSuffixes.forEach(function (suffix) {
-      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
-    });
-  }); 
-
-  // Test against invalid prefixes with invalid suffixes
-  invalidPrefixes.forEach(function (prefix) {
-    invalidSuffixes.forEach(function (suffix) {
-      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
-    });
-  }); 
+  ].forEach(function (x) { t.ok(!comment(x, ""), 'should not match ' + x) })
 
   t.end()
 })
@@ -101,27 +57,30 @@ function mapFileComment(s) {
 }
 
 test('mapFileComment regex old spec - @', function (t) {
-  [ '//@ '
-  , '  //@ '
-  , '\t//@ '
+
+  [ 
+    '//@ ',
+    '  //@ ',
+    '\t//@ ',
+    '///@ ',
   ].forEach(function (x) { t.ok(mapFileComment(x), 'matches ' + x) });
 
-  [ '///@ ' 
-  , '}}//@ '
-  , ' @// @'
+  [ 
+    ' @// @',
   ].forEach(function (x) { t.ok(!mapFileComment(x), 'does not match ' + x) })
   t.end()
 })
 
 test('mapFileComment regex new spec - #', function (t) {
-  [ '//# '
-  , '  //# '
-  , '\t//# '
+  [ 
+    '//@ ',
+    '  //@ ', // with leading space
+    '\t//@ ', // with leading tab
+    '//@ ', // with leading text
   ].forEach(function (x) { t.ok(mapFileComment(x), 'matches ' + x) });
 
-  [ '///# ' 
-  , '}}//# '
-  , ' #// #'
+  [ 
+    ' #// #',
   ].forEach(function (x) { t.ok(!mapFileComment(x), 'does not match ' + x) })
   t.end()
 })
@@ -133,26 +92,28 @@ function mapFileCommentWrap(s1, s2) {
 
 test('mapFileComment regex /* */ old spec - @', function (t) {
   [ [ '/*@ ', '*/' ]
-  , ['  /*@ ', '  */ ' ]
-  , [ '\t/*@ ', ' \t*/\t ']
+  , ['  /*@ ', '  */ ' ] // with leading spaces
+  , [ '\t/*@ ', ' \t*/\t '] // with a leading tab
+  , [ 'leading string/*@ ', '*/' ] // with a leading string
+  , [ '/*@ ', ' \t*/\t '] // with trailing whitespace
   ].forEach(function (x) { t.ok(mapFileCommentWrap(x[0], x[1]), 'matches ' + x.join(' :: ')) });
 
-  [ [ '/*/*@ ', '*/' ]
-  , ['}}/*@ ', '  */ ' ]
-  , [ ' @/*@ ', ' \t*/\t ']
+  [ ['/*@ ', ' */ */ ' ], // not the last thing on its line 
+    ['/*@ ', ' */ more text ' ] // not the last thing on its line 
   ].forEach(function (x) { t.ok(!mapFileCommentWrap(x[0], x[1]), 'does not match ' + x.join(' :: ')) });
   t.end()
 })
 
 test('mapFileComment regex /* */ new spec - #', function (t) {
   [ [ '/*# ', '*/' ]
-  , ['  /*# ', '  */ ' ]
-  , [ '\t/*# ', ' \t*/\t ']
+  , ['  /*# ', '  */ ' ] // with leading spaces
+  , [ '\t/*# ', ' \t*/\t '] // with a leading tab
+  , [ 'leading string/*# ', '*/' ] // with a leading string
+  , [ '/*# ', ' \t*/\t '] // with trailing whitespace
   ].forEach(function (x) { t.ok(mapFileCommentWrap(x[0], x[1]), 'matches ' + x.join(' :: ')) });
 
-  [ [ '/*/*# ', '*/' ]
-  , ['}}/*# ', '  */ ' ]
-  , [ ' #/*# ', ' \t*/\t ']
+  [ ['/*# ', ' */ */ ' ], // not the last thing on its line 
+    ['/*# ', ' */ more text ' ] // not the last thing on its line 
   ].forEach(function (x) { t.ok(!mapFileCommentWrap(x[0], x[1]), 'does not match ' + x.join(' :: ')) });
   t.end()
 })
