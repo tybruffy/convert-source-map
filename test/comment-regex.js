@@ -12,14 +12,20 @@ function comment(s) {
 }
 
 test('comment regex old spec - @', function (t) {
+  
+  // Test against source maps by themselves
   [ '//@ '
   , '  //@ '
   , '\t//@ '
   ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
 
+  // Test against source maps on the same line as code
   [ '///@ ' 
   , '}}//@ '
-  , ' @// @'
+  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+
+  // Test against improperly formatted source maps
+  [ ' @// @'
   ].forEach(function (x) { t.ok(!comment(x), 'does not match ' + x) })
   t.end()
 })
@@ -30,10 +36,15 @@ test('comment regex new spec - #', function (t) {
   , '\t//# '
   ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
 
+  // Test against source maps on the same line as code
   [ '///# ' 
   , '}}//# '
-  , ' #// #'
+  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+
+  // Test against improperly formatted source maps
+  [ ' #// #'
   ].forEach(function (x) { t.ok(!comment(x), 'does not match ' + x) })
+
   t.end()
 })
 
