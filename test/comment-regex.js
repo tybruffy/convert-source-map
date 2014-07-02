@@ -6,44 +6,91 @@ var test = require('tap').test
   , rx = require('..').commentRegex
   , mapFileRx = require('..').mapFileCommentRegex
 
-function comment(s) {
+function comment(prefix, suffix) {
   rx.lastIndex = 0;
-  return rx.test(s + 'sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiIiwic291cmNlcyI6WyJmdW5jdGlvbiBmb28oKSB7XG4gY29uc29sZS5sb2coXCJoZWxsbyBJIGFtIGZvb1wiKTtcbiBjb25zb2xlLmxvZyhcIndobyBhcmUgeW91XCIpO1xufVxuXG5mb28oKTtcbiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSJ9')
+  return rx.test(prefix + 'sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiIiwic291cmNlcyI6WyJmdW5jdGlvbiBmb28oKSB7XG4gY29uc29sZS5sb2coXCJoZWxsbyBJIGFtIGZvb1wiKTtcbiBjb25zb2xlLmxvZyhcIndobyBhcmUgeW91XCIpO1xufVxuXG5mb28oKTtcbiJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSJ9' + suffix)
 }
 
+// Source Map v2 Tests
 test('comment regex old spec - @', function (t) {
-  
-  // Test against source maps by themselves
-  [ '//@ '
-  , '  //@ '
-  , '\t//@ '
-  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+  var validPrefixes = [
+    // Source Map on it's own
+    '//@ ',
+    '  //@ ',
+    '\t//@ ',
+    // Source Map inline with code
+    '///@ ',
+    '}}//@ ',
+    // CSS Source Map on it's own
+    '/*@ ',
+    '  /*@ ',
+    '\t/*@ ',
+    // CSS Source Map inline with code
+    '//*@ ',
+    '}}/*@ ',
+    // Source Map V3 on it's own
+    '//# ',
+    '  //# ',
+    '\t//# ',
+    // Source Map V3 inline with code
+    '///# ',
+    '}}//# ',
+    // CSS Source Map V3 on it's own
+    '/*# ',
+    '  /*# ',
+    '\t/*# ',
+    // CSS Source Map V3 inline with code
+    '//*# ',
+    '}}/*# ',    
+  ];
 
-  // Test against source maps on the same line as code
-  [ '///@ ' 
-  , '}}//@ '
-  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+  var invalidPrefixes = [ 
+    ' @// @',
+    ' @/* @',
+    ' #// #',
+    ' #/* #',
+  ];
 
-  // Test against improperly formatted source maps
-  [ ' @// @'
-  ].forEach(function (x) { t.ok(!comment(x), 'does not match ' + x) })
-  t.end()
-})
+  var validSuffixes = [
+    '',
+    '\t*/',
+    ' */',
+  ];
 
-test('comment regex new spec - #', function (t) {
-  [ '//# '
-  , '  //# '
-  , '\t//# '
-  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+  var invalidSuffixes = [
+    '*/', // No space
+    ' */ */',
+    ' random other text',
+    ' */random other text',
+  ];
 
-  // Test against source maps on the same line as code
-  [ '///# ' 
-  , '}}//# '
-  ].forEach(function (x) { t.ok(comment(x), 'matches ' + x) });
+  // Test against valid prefixes with valid suffixes
+  validPrefixes.forEach(function (prefix) {
+    validSuffixes.forEach(function (suffix) {
+      t.ok(comment(prefix, suffix), 'should match ' + prefix + " with suffix: " + suffix)     
+    });
+  });
 
-  // Test against improperly formatted source maps
-  [ ' #// #'
-  ].forEach(function (x) { t.ok(!comment(x), 'does not match ' + x) })
+  // Test against invalid prefixes with valid suffixes
+  invalidPrefixes.forEach(function (prefix) {
+    validSuffixes.forEach(function (suffix) {
+      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
+    });
+  }); 
+
+  // Test against valid prefixes with invalid suffixes
+  validPrefixes.forEach(function (prefix) {
+    invalidSuffixes.forEach(function (suffix) {
+      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
+    });
+  }); 
+
+  // Test against invalid prefixes with invalid suffixes
+  invalidPrefixes.forEach(function (prefix) {
+    invalidSuffixes.forEach(function (suffix) {
+      t.ok(!comment(prefix, suffix), 'should not match ' + prefix + " with suffix: " + suffix)     
+    });
+  }); 
 
   t.end()
 })
